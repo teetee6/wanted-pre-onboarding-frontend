@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useValidation from '../../hooks/useValidation';
 import { useNavigate } from 'react-router-dom';
 import './SignIn.css';
@@ -44,6 +44,14 @@ function SignIn() {
       console.error('Error during sign in:', error);
     }
   };
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('access_token');
+    if (accessToken) {
+      navigate('/todo');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="signin-container">

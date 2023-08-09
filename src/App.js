@@ -4,9 +4,9 @@ import {
   Routes,
   Navigate,
 } from 'react-router-dom';
-import { useState } from 'react';
 import SignIn from './pages/SignIn/SignIn';
 import SignUp from './pages/SignUp/SignUp';
+import Todo from './pages/Todo/Todo';
 
 function App() {
   return (
@@ -15,6 +15,7 @@ function App() {
         <Route path="/" element={<Navigate replace to="/signin" />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/todo" element={<Todo />} />
       </Routes>
     </Router>
   );
