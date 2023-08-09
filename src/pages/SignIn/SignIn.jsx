@@ -16,6 +16,35 @@ function SignIn() {
     handleValidation,
   ] = useValidation(setEmail, setPassword);
 
+  const handleSignIn = async () => {
+    try {
+      const response = await fetch('/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Sign in successful');
+        console.log('Access Token:', data.access_token);
+
+        localStorage.setItem('access_token', data.access_token);
+
+        navigate('/todo');
+      } else {
+        console.error('Sign in failed');
+      }
+    } catch (error) {
+      console.error('Error during sign in:', error);
+    }
+  };
+
   return (
     <div className="signin-container">
       <h2>로그인</h2>
@@ -42,9 +71,7 @@ function SignIn() {
       <button
         className="login-button"
         data-testid="signin-button"
-        onClick={() => {
-          console.log('abled');
-        }}
+        onClick={handleSignIn}
         disabled={!handleValidation()}
       >
         로그인
