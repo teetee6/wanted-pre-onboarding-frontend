@@ -2,12 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './TodoList.css'; // Import your CSS file
 
-function TodoItem({ text, completed }) {
+function TodoItem({ id, todo, completed, updateTodo }) {
+  const handleCheckboxChange = () => {
+    updateTodo(id, !completed, todo);
+  };
+
   return (
     <li className={`todo-item ${completed ? 'completed' : ''}`}>
       <label>
-        <input type="checkbox" checked={completed} readOnly />
-        <span>{text}</span>
+        <input
+          type="checkbox"
+          checked={completed}
+          onChange={handleCheckboxChange}
+        />
+        <span>{todo}</span>
       </label>
     </li>
   );
@@ -42,6 +50,33 @@ function TodoList() {
       } catch (error) {
         console.error('Error during TODO creation:', error);
       }
+    }
+  };
+
+  const handleUpdateTodo = async (id, isCompleted, todo) => {
+    try {
+      const response = await fetch(`/todos/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        },
+        body: JSON.stringify({
+          todo,
+          isCompleted,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedTodos = todos.map((todo) =>
+          todo.id === id ? { ...todo, isCompleted } : todo
+        );
+        setTodos(updatedTodos);
+      } else {
+        console.error('Failed to update TODO');
+      }
+    } catch (error) {
+      console.error('Error during TODO update:', error);
     }
   };
 
@@ -95,8 +130,10 @@ function TodoList() {
         return (
           <TodoItem
             key={todo.id}
-            text={todo.todo}
+            id={todo.id}
+            todo={todo.todo}
             completed={todo.isCompleted}
+            updateTodo={handleUpdateTodo}
           />
         );
       })}
