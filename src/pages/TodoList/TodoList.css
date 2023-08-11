@@ -22,3 +22,13 @@ label {
 input[type='checkbox'] {
   margin-right: 10px;
 }
+
+.input-container {
+  display: flex;
+  align-items: center; /* Vertically align items within the container */
+}
+
+.input-container input {
+  margin-right: 10px; /* Add some spacing between the input and button */
+  width: 20%;
+}
