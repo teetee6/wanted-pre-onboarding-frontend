@@ -1,10 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './TodoList.css'; // Import your CSS file
+import './TodoList.css';
 
-function TodoItem({ id, todo, completed, updateTodo }) {
+function TodoItem({ id, todo, completed, toggleTodo, deleteTodo, modifyTodo }) {
+  const [modifiedTodo, setModifiedTodo] = useState(todo);
+  const [isEditing, setIsEditing] = useState(false);
+
   const handleCheckboxChange = () => {
-    updateTodo(id, !completed, todo);
+    toggleTodo(id, !completed, todo);
+  };
+
+  const handleDelete = () => {
+    deleteTodo(id);
+  };
+
+  const handleModify = () => {
+    setIsEditing(true); // Enable editing mode
+  };
+
+  const handleSubmit = () => {
+    console.log(modifiedTodo);
+    modifyTodo(id, completed, modifiedTodo);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setModifiedTodo(todo);
+    setIsEditing(false); // Disable editing mode
   };
 
   return (
@@ -15,8 +37,36 @@ function TodoItem({ id, todo, completed, updateTodo }) {
           checked={completed}
           onChange={handleCheckboxChange}
         />
-        <span>{todo}</span>
+        {isEditing ? (
+          <input
+            type="text"
+            value={modifiedTodo}
+            data-testid="modify-input"
+            onChange={(e) => setModifiedTodo(e.target.value)}
+          />
+        ) : (
+          <span>{todo}</span>
+        )}
       </label>
+      {isEditing ? (
+        <>
+          <button data-testid="submit-button" onClick={handleSubmit}>
+            제출
+          </button>
+          <button data-testid="cancel-button" onClick={handleCancel}>
+            취소
+          </button>
+        </>
+      ) : (
+        <>
+          <button data-testid="modify-button" onClick={handleModify}>
+            수정
+          </button>
+          <button data-testid="delete-button" onClick={handleDelete}>
+            삭제
+          </button>
+        </>
+      )}
     </li>
   );
 }
@@ -53,7 +103,7 @@ function TodoList() {
     }
   };
 
-  const handleUpdateTodo = async (id, isCompleted, todo) => {
+  const handleToggleTodo = async (id, isCompleted, todo) => {
     try {
       const response = await fetch(`/todos/${id}`, {
         method: 'PUT',
@@ -68,8 +118,55 @@ function TodoList() {
       });
 
       if (response.ok) {
-        const updatedTodos = todos.map((todo) =>
-          todo.id === id ? { ...todo, isCompleted } : todo
+        const updatedTodos = todos.map((todoItem) =>
+          todoItem.id === id ? { ...todoItem, isCompleted, todo } : todoItem
+        );
+        setTodos(updatedTodos);
+      } else {
+        console.error('Failed to update TODO');
+      }
+    } catch (error) {
+      console.error('Error during TODO update:', error);
+    }
+  };
+
+  const handleDeleteTodo = async (id) => {
+    try {
+      const response = await fetch(`/todos/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      });
+
+      if (response.ok) {
+        const updatedTodos = todos.filter((todo) => todo.id !== id);
+        setTodos(updatedTodos);
+      } else {
+        console.error('Failed to delete TODO');
+      }
+    } catch (error) {
+      console.error('Error during TODO deletion:', error);
+    }
+  };
+
+  const handleModifyTodo = async (id, isCompleted, newTodo) => {
+    try {
+      const response = await fetch(`/todos/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        },
+        body: JSON.stringify({
+          todo: newTodo,
+          isCompleted,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedTodos = todos.map((todoItem) =>
+          todoItem.id === id ? { ...todoItem, todo: newTodo } : todoItem
         );
         setTodos(updatedTodos);
       } else {
@@ -125,15 +222,15 @@ function TodoList() {
         </button>
       </div>
       {todos.map((todo) => {
-        // console.log(todo);
-        // todo.userId 활용해서 수정,삭제 권한 부여
         return (
           <TodoItem
             key={todo.id}
             id={todo.id}
             todo={todo.todo}
             completed={todo.isCompleted}
-            updateTodo={handleUpdateTodo}
+            toggleTodo={handleToggleTodo}
+            deleteTodo={handleDeleteTodo}
+            modifyTodo={handleModifyTodo}
           />
         );
       })}
